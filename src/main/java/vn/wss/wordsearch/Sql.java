@@ -14,9 +14,9 @@ import org.apache.logging.log4j.Logger;
 public class Sql {
 	private static final Logger log = LogManager.getLogger(Sql.class);
 	private static final String DEFAULT_DRIVER = "net.sourceforge.jtds.jdbc.Driver";//"oracle.jdbc.driver.OracleDriver";
-    private static final String DEFAULT_URL = "jdbc:jtds:sqlserver://192.168.100.169/Ninh_log";
-    private static final String DEFAULT_USERNAME = "thudt";
-    private static final String DEFAULT_PASSWORD = "12qwAS";
+    private static final String DEFAULT_URL = "";
+    private static final String DEFAULT_USERNAME = "";
+    private static final String DEFAULT_PASSWORD = "";
     private static Sql instance = new Sql();
 	public static Sql getInstance() {
 //		if (instance == null) {
