@@ -32,11 +32,13 @@ import tachyon.thrift.WorkerService.Processor.returnSpace;
 
 import com.datastax.spark.connector.japi.CassandraRow;
 import com.datastax.spark.connector.japi.rdd.CassandraJavaRDD;
-public class GetByUserId {
+
+public class AnalysticIP {
 
 	public static void main(String[] args) {
-		if(args.length<1){
-			System.err.println("------------------Miss UserId,Plz enter UserId------------------");
+		// TODO Auto-generated method stub
+		if(args.length<2){
+			System.err.println("-----------------------------Miss parameters,Plz enter --------------------------------");
 			System.exit(1);			
 		}
 		char[] arrOperators = { ',', '^', '*', '/', '+', '-', '&', '=', '<', '>', '=', '%', '(', ')', '{', '}', ';','.' };
@@ -50,54 +52,45 @@ public class GetByUserId {
 		JavaSparkContext sc = new 	JavaSparkContext(conf);
 		CassandraJavaRDD<CassandraRow> rawData = javaFunctions(sc)
 				.cassandraTable("tracking", "tracking").where(
-						"year_month = ? ", 20150714
+						"year_month = ? ", args[0]
 						);	
-		JavaRDD<CassandraRow> reduceByKey =rawData
-				.filter(new Function<CassandraRow,Boolean>(){
-					public Boolean call(CassandraRow row) throws Exception {
-						String uri=row.getString("user_id");
-						if (uri==null)
-						{
-							return false;										
-						}
-						return uri.contains(args[0]);
-			}
-		});
-		/*.mapToPair(new PairFunction<CassandraRow, String, Integer>() {
-			//
-			@Override
-			public Tuple2<String, Integer> call(CassandraRow row)
-				throws Exception {
-			// TODO Auto-generated method stub
-				String uri=row.getString("uri");
-				String key=uri.split("uri=http://websosanh.vn/s/")[1].split(regex)[0];
-				return new Tuple2<String, Integer>(key, 1);
-			}
-		})
-		.reduceByKey(new Function2<Integer, Integer, Integer>() {
-
+		JavaRDD<CassandraRow> resultByWebsiteId= rawData
+				.filter( new Function<CassandraRow, Boolean>() {
+					
 					@Override
-					public Integer call(Integer v1, Integer v2)
-							throws Exception {
+					public Boolean call(CassandraRow v1) throws Exception {
 						// TODO Auto-generated method stub
-						return v1 + v2;
+						
+						String websiteid =v1.getString("website_id");
+						if (websiteid==null)
+						{							
+							return false;
+						}
+						else {
+							return	websiteid.equals(args[1]);
+						}												
 					}
-				});*/
-		//.count();
-		
-		System.out.println("------------------------------------result : " + reduceByKey.count()+"--------------------------------------");
-		//List<Tuple2<String,Integer>> results = reduceByKey.collect();
-		if(reduceByKey.count()>0)
+				}).cache();
+		JavaPairRDD<String,Integer> result= resultByWebsiteId
+				.mapToPair(new PairFunction<CassandraRow, String, Integer>() {
+					@Override 
+					public Tuple2<String, Integer> call(CassandraRow row) 
+							throws Exception{						
+						return new Tuple2<String, Integer>(row.getString("ip"), 1);
+					}
+				})
+				.reduceByKey(new Function2<Integer, Integer, Integer>() {
+					
+					@Override
+					public Integer call(Integer v1, Integer v2) throws Exception {
+						// TODO Auto-generated method stub
+						return v1+v2;
+					}
+				})
+				;
+		for (Tuple2<String, Integer> item : result.collect())
 		{
-			for(CassandraRow row : reduceByKey.collect())
-			{				
-				System.out.println("year_month: "+ row.getString("year_month")+"--------"+"uri: "+row.getString("uri"));
-			}						
+			System.out.println("----------------"+"ip:  "+item._1()+"-------------"+"count:  "+item._2());			
 		}
-		else {
-			System.out.println("-----------no result!!!------------");
-		}
-		
 	}
-
 }
