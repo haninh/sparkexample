@@ -73,7 +73,15 @@ public class UserIDViewNews {
 						}
 						return uri.contains("http://websosanh.vn/s/");
 			}
-		});
+		})
+		/*.mapToPair(new MapFunction<CassandraRow, String,Integer>(){
+			@Override
+			public Tuple2<String,Integer> call(CassandraRow row) throws Exception{
+				String uri=row.getString("uri");
+				String key=uri.sp
+			}
+			})*/
+		;
 		JavaRDD<String> words = containUri.flatMap(new FlatMapFunction<CassandraRow, String>() {
 			  public Iterable<String> call(CassandraRow rows) throws Exception { 
 				  String s = rows.getString("uri");
@@ -86,6 +94,7 @@ public class UserIDViewNews {
 			  public Integer call(Integer a, Integer b) { return a + b; }
 			});
 		List<Tuple2<String,Integer>> results = reduceByKey.collect();
+		
 		String driver =  DEFAULT_DRIVER;
         String url =  DEFAULT_URL;
         String username = DEFAULT_USERNAME;
